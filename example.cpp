@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 #include <thread>
-using namespace std;
-
 
 int Process(int32_t iKey, int32_t & iValue) {
 	static LRUCache<int32_t, int32_t> tCache(100000, 3600);
@@ -26,7 +24,7 @@ void TestCacheUpdateThread() {
 			iHit++;
 		}
 	}
-	cout << "Process cnt " << iCnt << "hitcache" << iHit << endl;;
+    std::cout << "Process cnt " << iCnt << "hitcache" << iHit << std::endl;;
 }
 
 int main(int argc, char ** argv) {
@@ -45,7 +43,7 @@ int main(int argc, char ** argv) {
 
 	struct timeval tEnd;
 	gettimeofday(&tEnd, NULL);
-    cout << "cost" << 1000*(tEnd.tv_sec-tStart.tv_sec) + (tEnd.tv_usec-tStart.tv_usec)/1000 << " ms" << endl;
+    std::cout << "cost" << 1000*(tEnd.tv_sec-tStart.tv_sec) + (tEnd.tv_usec-tStart.tv_usec)/1000 << " ms" << std::endl;
 
 	return 0;
 }

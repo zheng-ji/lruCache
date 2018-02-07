@@ -2,8 +2,6 @@
 #include <list>
 #include <unordered_map>
 #include <mutex>
-using namespace std;
-
 
 template<typename T, typename Value>
 class LRUCache 
@@ -21,7 +19,6 @@ class LRUCache
         ListIter listiter;
         time_t updatetime;
     };
-
 
     typedef typename std::unordered_map<T, CacheItem> HashMap;
     typedef typename std::unordered_map<T, CacheItem>::iterator HashMapIter;
@@ -90,7 +87,7 @@ class LRUCache
             }
             m_List.push_front(t);
             CacheItem mapItem(value, m_List.begin());
-            m_LRUCache.insert(make_pair(t, mapItem));
+            m_LRUCache.insert(std::make_pair(t, mapItem));
             m_iCacheSize++;
             return m_iCacheSize;
         }
@@ -122,4 +119,4 @@ class LRUCache
         int m_iEraseCnt;
         int m_iTimeLimit;
         std::mutex mt;
-};  
+};
