@@ -11,10 +11,8 @@ class LRUCache
     typedef typename std::list<T> List;
     typedef typename std::list<T>::iterator ListIter;
 
-    struct CacheItem
-    {
-        CacheItem(const Value & v, const ListIter & iter)
-        {
+    struct CacheItem {
+        CacheItem(const Value & v, const ListIter & iter) {
             value = v;
             listiter = iter;
             updatetime = time(NULL);
@@ -41,28 +39,23 @@ class LRUCache
         {}
 
         // bUpdate，获取cache时是否更新cache访问时间，默认更新
-        int GetCache(const T & t, Value & value, bool bUpdate = true)
-        {
+        int GetCache(const T & t, Value & value, bool bUpdate = true) {
             std::lock_guard<std::mutex> lck(mt);
             HashMapIter mapIter = m_LRUCache.find(t);
 
-            if(mapIter == m_LRUCache.end())
+            if (mapIter == m_LRUCache.end())
                 return -1;
 
             mapIter = m_LRUCache.find(t);
-            if(mapIter != m_LRUCache.end())
-            {
-                if(m_iTimeLimit > 0)
-                {
+            if (mapIter != m_LRUCache.end()) {
+                if (m_iTimeLimit > 0) {
                     time_t tNow = time(NULL);
-                    if(tNow - mapIter->second.updatetime > m_iTimeLimit)
-                    {
+                    if (tNow - mapIter->second.updatetime > m_iTimeLimit) {
                         return -2;
                     }
                 }
                 value = mapIter->second.value;
-                if(bUpdate)
-                {
+                if (bUpdate) {
                     m_List.erase(mapIter->second.listiter);
                     m_List.push_front(t);
                     mapIter->second.listiter = m_List.begin();
@@ -72,12 +65,10 @@ class LRUCache
             return -3;
         }
 
-        int UpdateCache(const T & t, const Value & value)
-        {
+        int UpdateCache(const T & t, const Value & value) {
             std::lock_guard<std::mutex> lck(mt);
             HashMapIter mapIter = m_LRUCache.find(t);
-            if(mapIter != m_LRUCache.end())
-            {
+            if (mapIter != m_LRUCache.end()) {
                 m_List.erase(mapIter->second.listiter);
                 m_List.push_front(t);
                 mapIter->second.listiter = m_List.begin();
@@ -85,14 +76,12 @@ class LRUCache
                 mapIter->second.value = value;
                 return m_iCacheSize;
             }
-            if(m_iCacheLimit > 0)
-            {
-                while(m_iCacheLimit < m_iCacheSize)
-                {
+            if (m_iCacheLimit > 0) {
+                while (m_iCacheLimit < m_iCacheSize) {
                     T t = m_List.back();
                     m_List.pop_back();
                     HashMapIter mapIter = m_LRUCache.find(t);
-                    if(mapIter == m_LRUCache.end())
+                    if (mapIter == m_LRUCache.end())
                         break;
                     m_LRUCache.erase(mapIter);
                     m_iCacheSize--;
@@ -106,15 +95,14 @@ class LRUCache
             return m_iCacheSize;
         }
 
-        int PopCache(T & t, Value & value)
-        {
+        int PopCache(T & t, Value & value) {
             std::lock_guard<std::mutex> lck(mt);
-            if(m_iCacheSize == 0)
+            if (m_iCacheSize == 0)
                 return -1;
             t = m_List.back();
             m_List.pop_back();
             HashMapIter mapIter = m_LRUCache.find(t);
-            if(mapIter == m_LRUCache.end())
+            if (mapIter == m_LRUCache.end())
                 return -2;
             value = mapIter->second.value;
             m_LRUCache.erase(mapIter);
@@ -122,8 +110,7 @@ class LRUCache
             return 0;
         }
 
-        inline int CacheSize()
-        {
+        inline int CacheSize() {
             return m_iCacheSize;
         }
 
