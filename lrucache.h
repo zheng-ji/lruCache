@@ -6,34 +6,34 @@ using namespace std;
 
 
 template<typename T, typename Value>
-class LRUCacheMap 
+class LRUCache 
 {
-    typedef typename std::list<T> LRUCacheList;
-    typedef typename std::list<T>::iterator LRUCacheListIter;
+    typedef typename std::list<T> List;
+    typedef typename std::list<T>::iterator ListIter;
 
-    struct LRUCacheMapItem
+    struct CacheItem
     {
-        LRUCacheMapItem(const Value & v, const LRUCacheListIter & iter)
+        CacheItem(const Value & v, const ListIter & iter)
         {
             value = v;
             listiter = iter;
             updatetime = time(NULL);
         }
         Value value;
-        LRUCacheListIter listiter;
+        ListIter listiter;
         time_t updatetime;
     };
 
 
-    typedef typename std::unordered_map<T, LRUCacheMapItem> LRUCacheHashMap;
-    typedef typename std::unordered_map<T, LRUCacheMapItem>::iterator LRUCacheHashMapIter;
+    typedef typename std::unordered_map<T, CacheItem> HashMap;
+    typedef typename std::unordered_map<T, CacheItem>::iterator HashMapIter;
 
     public:
 
     // 需要自动删除cache则设置iCacheLimit为cache总量，否则置为0
     // 需要设置cache的超时，则设置iTimeLimit为超时时间，按秒计算，否则置为0
     // 默认不自动清理cache，cache不过期
-    LRUCacheMap(int iCacheLimit = 0, int iTimeLimit = 0)
+    LRUCache(int iCacheLimit = 0, int iTimeLimit = 0)
         :m_iCacheSize(0),
         m_iCacheLimit(iCacheLimit),
         m_iEraseCnt(0),
@@ -44,13 +44,13 @@ class LRUCacheMap
     int GetCache(const T & t, Value & value, bool bUpdate = true)
     {
         std::lock_guard<std::mutex> lck(mt);
-        LRUCacheHashMapIter mapIter = m_LRUCacheMap.find(t);
+        HashMapIter mapIter = m_LRUCache.find(t);
 
-        if(mapIter == m_LRUCacheMap.end())
+        if(mapIter == m_LRUCache.end())
             return -1;
 
-        mapIter = m_LRUCacheMap.find(t);
-        if(mapIter != m_LRUCacheMap.end())
+        mapIter = m_LRUCache.find(t);
+        if(mapIter != m_LRUCache.end())
         {
             if(m_iTimeLimit > 0)
             {
@@ -63,9 +63,9 @@ class LRUCacheMap
             value = mapIter->second.value;
             if(bUpdate)
             {
-                m_LRUCacheList.erase(mapIter->second.listiter);
-                m_LRUCacheList.push_front(t);
-                mapIter->second.listiter = m_LRUCacheList.begin();
+                m_List.erase(mapIter->second.listiter);
+                m_List.push_front(t);
+                mapIter->second.listiter = m_List.begin();
             }
             return m_iCacheSize;
         }
@@ -75,12 +75,12 @@ class LRUCacheMap
     int UpdateCache(const T & t, const Value & value)
     {
         std::lock_guard<std::mutex> lck(mt);
-        LRUCacheHashMapIter mapIter = m_LRUCacheMap.find(t);
-        if(mapIter != m_LRUCacheMap.end())
+        HashMapIter mapIter = m_LRUCache.find(t);
+        if(mapIter != m_LRUCache.end())
         {
-            m_LRUCacheList.erase(mapIter->second.listiter);
-            m_LRUCacheList.push_front(t);
-            mapIter->second.listiter = m_LRUCacheList.begin();
+            m_List.erase(mapIter->second.listiter);
+            m_List.push_front(t);
+            mapIter->second.listiter = m_List.begin();
             mapIter->second.updatetime = time(NULL);
             mapIter->second.value = value;
             return m_iCacheSize;
@@ -89,19 +89,19 @@ class LRUCacheMap
         {
             while(m_iCacheLimit < m_iCacheSize)
             {
-                T t = m_LRUCacheList.back();
-                m_LRUCacheList.pop_back();
-                LRUCacheHashMapIter mapIter = m_LRUCacheMap.find(t);
-                if(mapIter == m_LRUCacheMap.end())
+                T t = m_List.back();
+                m_List.pop_back();
+                HashMapIter mapIter = m_LRUCache.find(t);
+                if(mapIter == m_LRUCache.end())
                     break;
-                m_LRUCacheMap.erase(mapIter);
+                m_LRUCache.erase(mapIter);
                 m_iCacheSize--;
                 m_iEraseCnt++;
             }
         }
-        m_LRUCacheList.push_front(t);
-        LRUCacheMapItem mapItem(value, m_LRUCacheList.begin());
-        m_LRUCacheMap.insert(make_pair(t, mapItem));
+        m_List.push_front(t);
+        CacheItem mapItem(value, m_List.begin());
+        m_LRUCache.insert(make_pair(t, mapItem));
         m_iCacheSize++;
         return m_iCacheSize;
     }
@@ -111,13 +111,13 @@ class LRUCacheMap
         std::lock_guard<std::mutex> lck(mt);
         if(m_iCacheSize == 0)
             return -1;
-        t = m_LRUCacheList.back();
-        m_LRUCacheList.pop_back();
-        LRUCacheHashMapIter mapIter = m_LRUCacheMap.find(t);
-        if(mapIter == m_LRUCacheMap.end())
+        t = m_List.back();
+        m_List.pop_back();
+        HashMapIter mapIter = m_LRUCache.find(t);
+        if(mapIter == m_LRUCache.end())
             return -2;
         value = mapIter->second.value;
-        m_LRUCacheMap.erase(mapIter);
+        m_LRUCache.erase(mapIter);
         m_iCacheSize--;
         return 0;
     }
@@ -128,8 +128,8 @@ class LRUCacheMap
     }
 
     private:
-        LRUCacheList m_LRUCacheList;
-        LRUCacheHashMap m_LRUCacheMap;
+        List m_List;
+        HashMap m_LRUCache;
         int m_iCacheSize;
         int m_iCacheLimit;
         int m_iEraseCnt;

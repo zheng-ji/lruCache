@@ -9,7 +9,7 @@ using namespace std;
 
 int Process(int32_t iKey, int32_t & iValue)
 {
-	static LRUCacheMap<int32_t, int32_t> tCache(100000, 3600);
+	static LRUCache<int32_t, int32_t> tCache(100000, 3600);
 	if(tCache.GetCache(iKey, iValue) > 0)
 		return 1;
 	iValue = random(); // 未命中cache，进行查询处理后得到结果再入cache
