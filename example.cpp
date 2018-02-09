@@ -4,7 +4,8 @@
 #include <string>
 #include <thread>
 
-int Process(int32_t iKey, int32_t & iValue) {
+int Process(int32_t iKey, int32_t & iValue) 
+{
     static LRUCache<int32_t, int32_t> tCache(100000, 3600);
     if (tCache.GetCache(iKey, iValue) > 0)
         return 1;
@@ -13,30 +14,38 @@ int Process(int32_t iKey, int32_t & iValue) {
     return 0;
 }
 
-void TestCacheUpdateThread() {
+void TestCacheUpdateThread() 
+{
     int iCnt = 10000;
     int iHit = 0;
-    for (auto i = 0; i < iCnt; i++) {
+    for (auto i = 0; i < iCnt; i++) 
+    {
         int32_t iKey = random() % 200000;
         int32_t iValue = 0;
-        if (Process(iKey, iValue) > 0) {
+        if (Process(iKey, iValue) > 0) 
+        {
             iHit++;
         }
     }
     std::cout << "Process cnt:" << iCnt << " hitcache:" << iHit << std::endl;;
 }
 
-int main(int argc, char ** argv) {
+int main(int argc, char ** argv) 
+{
     struct timeval tStart;
     gettimeofday(&tStart, NULL);
 
     srand(time(NULL));
 
     std::thread threads[50];
-    for (auto i = 0; i < 50; i++) {
+
+    for (auto i = 0; i < 50; i++) 
+    {
         threads[i] = std::thread(TestCacheUpdateThread);
     }
-    for (auto & th : threads) {
+
+    for (auto & th : threads) 
+    {
         th.join();
     }
 
